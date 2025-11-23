@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinal CSF Leak Risk Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        .form-container {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .input-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkbox-item input {
+            width: auto;
+        }
+        .calculate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .risk-low {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        .risk-medium {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+        .risk-high {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        .risk-value {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .risk-bar {
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .risk-fill {
+            height: 100%;
+            transition: width 0.8s ease;
+            border-radius: 6px;
+        }
+        .risk-level {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .risk-description {
+            font-size: 14px;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+            border-left: 4px solid #3498db;
+        }
+        .reference {
+            font-size: 12px;
+            color: #888;
+            margin-top: 20px;
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Spinal CSF Leak Risk Predictor</h1>
+            <p>Clinical Prediction Tool Based on Multivariate Analysis</p>
+        </div>
+        
+        <div class="form-container">
+            <div class="form-group">
+                <label for="rSCA">Residual Spinal Canal Area (rSCA)</label>
+                <input type="number" id="rSCA" placeholder="Enter rSCA percentage" step="0.1" min="0" max="100">
+                <div class="input-hint">Percentage of residual spinal canal area (0-100%)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="SegNum">Number of Surgical Segments</label>
+                <select id="SegNum">
+                    <option value="">Select number of segments</option>
+                    <option value="1">1 segment</option>
+                    <option value="2">2 segments</option>
+                    <option value="3">3 segments</option>
+                    <option value="4">4 segments</option>
+                    <option value="5">5 segments</option>
+                    <option value="6">6 segments</option>
+                </select>
+                <div class="input-hint">Number of involved surgical segments (1-6)</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Dural Adhesion (DuraAdh)</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="radio" id="DuraAdh0" name="DuraAdh" value="0">
+                        <label for="DuraAdh0">No adhesion (0)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="radio" id="DuraAdh1" name="DuraAdh" value="1">
+                        <label for="DuraAdh1">With adhesion (1)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Dural Ossification (DuraOss)</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="radio" id="DuraOss0" name="DuraOss" value="0">
+                        <label for="DuraOss0">No ossification (0)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="radio" id="DuraOss1" name="DuraOss" value="1">
+                        <label for="DuraOss1">With ossification (1)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateRisk()">Calculate Risk Probability</button>
+            
+            <div id="result" class="result">
+                <h3>Prediction Result</h3>
+                <div class="risk-value" id="riskValue">0%</div>
+                <div class="risk-bar">
+                    <div class="risk-fill" id="riskFill"></div>
+                </div>
+                <div class="risk-level" id="riskLevel">Risk Level</div>
+                <div class="risk-description" id="riskDescription">Risk description will appear here</div>
+            </div>
+            
+            <div class="instructions">
+                <h4>Instructions:</h4>
+                <p>• Enter the residual spinal canal area as a percentage (0-100%)</p>
+                <p>• Select the number of involved surgical segments (1-6)</p>
+                <p>• Indicate presence or absence of dural adhesion and ossification</p>
+                <p>• Click "Calculate Risk Probability" to get the prediction</p>
+                <p>• This tool is for reference only, clinical decisions should consider individual patient factors</p>
+            </div>
+            
+            <div class="reference">
+                <p>Prediction model based on multivariate logistic regression analysis</p>
+                <p>© Clinical Research Tool - For Medical Professionals</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Model coefficients - REPLACE THESE WITH YOUR ACTUAL COEFFICIENTS
+        const COEFFICIENTS = {
+            intercept: -2.9195,    // β₀ - Replace with actual intercept
+            rSCA: 0.0458,          // β₁ - Replace with actual coefficient for rSCA
+            SegNum: 0.3187,        // β₂ - Replace with actual coefficient for SegNum
+            DuraAdh: 0.0896,       // β₃ - Replace with actual coefficient for DuraAdh
+            DuraOss: 0.1024        // β₄ - Replace with actual coefficient for DuraOss
+        };
+
+        function calculateRisk() {
+            // Get input values
+            const rSCA = parseFloat(document.getElementById('rSCA').value);
+            const SegNum = parseInt(document.getElementById('SegNum').value);
+            const DuraAdh = document.querySelector('input[name="DuraAdh"]:checked');
+            const DuraOss = document.querySelector('input[name="DuraOss"]:checked');
+            
+            // Validate inputs
+            if (isNaN(rSCA) || rSCA < 0 || rSCA > 100) {
+                alert('Please enter a valid rSCA percentage (0-100)');
+                return;
+            }
+            if (isNaN(SegNum) || SegNum < 1 || SegNum > 6) {
+                alert('Please select a valid number of surgical segments (1-6)');
+                return;
+            }
+            if (!DuraAdh) {
+                alert('Please select dural adhesion status');
+                return;
+            }
+            if (!DuraOss) {
+                alert('Please select dural ossification status');
+                return;
+            }
+            
+            const duraAdhValue = parseInt(DuraAdh.value);
+            const duraOssValue = parseInt(DuraOss.value);
+            
+            // Calculate linear predictor
+            const linearPredictor = COEFFICIENTS.intercept +
+                                  COEFFICIENTS.rSCA * rSCA +
+                                  COEFFICIENTS.SegNum * SegNum +
+                                  COEFFICIENTS.DuraAdh * duraAdhValue +
+                                  COEFFICIENTS.DuraOss * duraOssValue;
+            
+            // Calculate probability
+            const probability = 1 / (1 + Math.exp(-linearPredictor));
+            const riskPercent = (probability * 100).toFixed(1);
+            
+            // Display results
+            document.getElementById('riskValue').textContent = riskPercent + '%';
+            document.getElementById('riskFill').style.width = riskPercent + '%';
+            
+            // Set risk level and styling
+            const resultDiv = document.getElementById('result');
+            let riskLevel, riskDesc, riskColor;
+            
+            if (probability < 0.3) {
+                riskLevel = 'LOW RISK';
+                riskDesc = 'Low probability of CSF leak. Standard surgical precautions recommended.';
+                riskColor = '#28a745';
+                resultDiv.className = 'result risk-low';
+            } else if (probability < 0.7) {
+                riskLevel = 'MODERATE RISK';
+                riskDesc = 'Moderate probability of CSF leak. Consider additional intraoperative measures.';
+                riskColor = '#ffc107';
+                resultDiv.className = 'result risk-medium';
+            } else {
+                riskLevel = 'HIGH RISK';
+                riskDesc = 'High probability of CSF leak. Implement comprehensive preventive strategies and prepare for dural repair.';
+                riskColor = '#dc3545';
+                resultDiv.className = 'result risk-high';
+            }
+            
+            document.getElementById('riskLevel').textContent = riskLevel;
+            document.getElementById('riskDescription').textContent = riskDesc;
+            document.getElementById('riskFill').style.background = riskColor;
+            resultDiv.style.display = 'block';
+            
+            // Scroll to results
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Enter key support
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                calculateRisk();
+            }
+        });
+        
+        // Input validation
+        document.getElementById('rSCA').addEventListener('input', function(e) {
+            let value = parseFloat(e.target.value);
+            if (value > 100) e.target.value = 100;
+            if (value < 0) e.target.value = 0;
+        });
+    </script>
+</body>
+</html>
